@@ -1,24 +1,16 @@
 <template>
     <div>
-        
-        <apexcharts width="600" height="300" :type="chartType" :options="options" :series="series">
-        </apexcharts>
-
-<div class="btn-group-rounded float-right col-xs-12">
-            <button class="btn btn-default btn-xs" v-bind:class="{ selectedChartBtnClass: !isActive}"  @click="changeChart('interestchart')">Interest Over Time</button>
-            <button class="btn btn-default btn-xs" v-bind:class="{ selectedChartBtnClass: isActive}"  @click="changeChart('monthlychart')">Monthly Search Volumes</button>
+        <div class="col-sm-12">
+            <router-link to="/login" class="btn btn-primary">Logout</router-link>
         </div>
-        <ul v-if="users.items">
-            <li v-for="user in users.items" :key="user.id">
-                {{user.firstName + ' ' + user.lastName}}
-                <span v-if="user.deleting"><em> - Deleting...</em></span>
-                <span v-else-if="user.deleteError" class="text-danger"> - ERROR: {{user.deleteError}}</span>
-                <span v-else> - <a @click="deleteUser(user.id)" class="text-danger">Delete</a></span>
-            </li>
-        </ul>
-        <p>
-            <router-link to="/login">Logout</router-link>
-        </p>
+        <div class="col-sm-12">
+            <apexcharts width="4000" height="600" :type="chartType" :options="options" :series="series">
+            </apexcharts>
+            <div class="btn-group-rounded col-xs-12">
+                <button class="btn btn-success btn-xs" v-bind:class="{ selectedChartBtnClass: isActive}"  @click="changeChart('interestchart')">Area Chart View</button>
+                <button class="btn btn-success btn-xs" v-bind:class="{ selectedChartBtnClass: !isActive}"  @click="changeChart('monthlychart')">Line Chart View</button>
+            </div>
+        </div>
     </div>
 </template>
 
@@ -32,12 +24,14 @@ export default {
      data() {
         return {
             isActive:true,
-            chartType:'bar',
+            chartType:'area',
             selectedChartBtnClass:'',
             series: [{
                 name: 'Search Volume',
                 data: []
             }],
+            SeriesPrice:[],
+            XaxisTime:[],
             monthlySeries:[],
             options: {
                 dataLabels: {
@@ -55,11 +49,13 @@ export default {
                 yaxis: {
                     seriesName: 'Search Volume',
                     opposite: false,
-                    tickAmount: 2,
+                    tickAmount: 10,
                 },
                 xaxis: {
                     categories: [],
-                    
+                    labels: {
+                        show: false,
+                    }
                 },
             },
         }
@@ -71,10 +67,7 @@ export default {
         })
     },
     mounted () {
-        axios.get('https://www.gbm.com.mx/Mercados/ObtenerDatosGrafico?empresa=IPC')
-        .then(response => {
-        console.log(response);
-        });
+        this.loadChartData();
     },
     created () {
         this.getAllUsers();
@@ -84,30 +77,54 @@ export default {
             getAllUsers: 'getAll',
             deleteUser: 'delete'
         }),
+        loadChartData(){
+            axios.get('https://www.gbm.com.mx/Mercados/ObtenerDatosGrafico?empresa=IPC', {header:{'Allow-Control-Allow-Origin': '*'}})
+            .then(response => {
+                for (var i=0;i<response.data.resultObj.length;i++)
+                {
+                    this.XaxisTime[i] = response.data.resultObj[i].Fecha;
+                    this.SeriesPrice[i] = response.data.resultObj[i].Precio;
+                }
+                this.options = {
+                        xaxis: {categories:this.XaxisTime.reverse()}
+                    };
+                this.series = [{
+                    data: this.SeriesPrice.reverse()
+                }];
+            });
+        },
         changeChart(select)
         {
             if(select === 'monthlychart')
             {
-                this.isActive = true;
+                this.isActive = false;
                 this.chartType = 'bar';
                 this.options = {
                     dataLabels:{enabled:false},
-                    xaxis: {categories:this.monthlySeries.reverse()},
+                    xaxis: {categories:this.XaxisTime.reverse(),
+                        labels: {
+                            show: false,
+                            }
+                    },
                     yaxis: {
                         opposite: false,
-                        tickAmount: 2,
+                        tickAmount: 10,
                     },
                 };
             }
             else{
-                this.isActive = false;
+                this.isActive = true;
                 this.chartType = 'area';
                 this.options = {
                     dataLabels:{enabled:false},
-                    xaxis: {categories:this.monthlySeries.reverse()},
+                    xaxis: {categories:this.XaxisTime.reverse(),
+                        labels: {
+                            show: false,
+                            }
+                    },
                     yaxis: {
                         opposite: false,
-                        tickAmount: 2,
+                        tickAmount: 10,
                     },
                 };
             }
@@ -115,3 +132,11 @@ export default {
     }
 };
 </script>
+<style>
+    .btn-group-rounded .selectedChartBtnClass {
+        color: white;
+        background: #2da6e9;
+        border-bottom: 2px solid #168ccd;
+    }
+   
+</style>
