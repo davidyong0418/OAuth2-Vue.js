@@ -10,14 +10,17 @@ export const userService = {
     update,
     delete: _delete
 };
-
+console.log(config.apiUrl)
+var apiUrl = config.apiUrl;
+var authenticateUrl = apiUrl+'/users/authenticate';
+var registerUrl = apiUrl+'/users/register';
 function login(username, password) {
     const requestOptions = {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ username, password })
     };
-    return fetch(`${config.apiUrl}/users/authenticate`, requestOptions)
+    return fetch(authenticateUrl, requestOptions)
         .then(handleResponse)
         .then(user => {
             console.log(user);
@@ -43,7 +46,7 @@ function register(user) {
         body: JSON.stringify(user)
     };
 
-    return fetch(`${config.apiUrl}/users/register`, requestOptions).then(handleResponse);
+    return fetch(registerUrl, requestOptions).then(handleResponse);
 }
 
 function getAll() {
@@ -52,7 +55,7 @@ function getAll() {
         headers: authHeader()
     };
 
-    return fetch(`${config.apiUrl}/users`, requestOptions).then(handleResponse);
+    return fetch(config.apiUrl+'/users', requestOptions).then(handleResponse);
 }
 
 
@@ -62,7 +65,7 @@ function getById(id) {
         headers: authHeader()
     };
 
-    return fetch(`${config.apiUrl}/users/${id}`, requestOptions).then(handleResponse);
+    return fetch(config.apiUrl+'/users/'+id, requestOptions).then(handleResponse);
 }
 
 function update(user) {
@@ -72,7 +75,7 @@ function update(user) {
         body: JSON.stringify(user)
     };
 
-    return fetch(`${config.apiUrl}/users/${user.id}`, requestOptions).then(handleResponse);
+    return fetch(config.apiUrl+'/users/'+user.id, requestOptions).then(handleResponse);
 }
 
 // prefixed function name with underscore because delete is a reserved word in javascript
@@ -82,7 +85,7 @@ function _delete(id) {
         headers: authHeader()
     };
 
-    return fetch(`${config.apiUrl}/users/${id}`, requestOptions).then(handleResponse);
+    return fetch(config.apiUrl+'/users/'+id, requestOptions).then(handleResponse);
 }
 
 function handleResponse(response) {

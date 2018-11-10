@@ -116,13 +116,11 @@ export function configureFakeBackend() {
                         // return 401 not authorised if token is null or invalid
                         reject('Unauthorised');
                     }
-
                     return;
                 }
 
                 // pass through any requests not handled above
                 realFetch(url, opts).then(response => resolve(response));
-
             }, 500);
         });
     }
